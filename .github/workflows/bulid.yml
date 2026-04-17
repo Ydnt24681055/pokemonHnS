@@ -1,4 +1,4 @@
-name: Build ROM Fix
+name: Build Full ROM (Safe Mode)
 on: [push, workflow_dispatch]
 
 jobs:
@@ -7,14 +7,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install System Tools
+      - name: Install Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi python3 libpng-dev wget
+          sudo apt-get install -y build-essential binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi python3 libpng-dev wget unzip
 
-      - name: Setup agbcc (Direct Download)
+      - name: Setup agbcc
         run: |
-          # במקום git clone, אנחנו מורידים את הקבצים ישירות כדי למנוע שגיאה 128
           wget https://github.com
           unzip master.zip
           cd agbcc-master
@@ -22,16 +21,17 @@ jobs:
           sh install.sh ../
           cd ..
 
-      - name: Download Base ROM
+      - name: Get Base ROM
         run: |
           wget -O baserom.gba "https://archive.org"
 
-      - name: Build ROM
+      - name: Build ROM (Slow & Steady)
         run: |
           make clean
-          make -j$(nproc)
+          # בנייה ללא -j כדי לא להעמיס על הזיכרון ולמנוע שגיאה 9
+          make
 
-      - name: Upload Artifact
+      - name: Upload
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -39,4 +39,3 @@ jobs:
           path: |
             *.gba
             build/noking/*.gba
-            
