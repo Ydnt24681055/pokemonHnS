@@ -1,12 +1,15 @@
 name: Build ROM
-on: [push, workflow_dispatch] # ירוץ בכל פעם שתעלה קוד או ידנית
+on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # משתמש בגרסה v4 כדי למנוע את אזהרת ה-Node.js
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive # מוריד אוטומטית תת-תיקיות אם יש כאלו
 
       - name: Install dependencies
         run: |
@@ -15,13 +18,22 @@ jobs:
 
       - name: Install agbcc
         run: |
+          # אם agbcc כבר קיים כתיקייה, נמחק אותה כדי למנוע שגיאת 128
+          rm -rf agbcc
           git clone https://github.com
           cd agbcc
           ./build.sh
           ./install.sh ../
+          cd ..
 
       - name: Build ROM
-        run: make -j$(nproc)
+        run: |
+          # בדיקה אם ה-baserom קיים, אם לא - הייצור ייכשל עם הודעה ברורה
+          if [ ! -f baserom.gba ]; then
+            echo "Error: baserom.gba not found in root directory!"
+            exit 1
+          fi
+          make -j$(nproc)
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
