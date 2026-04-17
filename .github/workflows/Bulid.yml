@@ -1,0 +1,49 @@
+name: Build and Release ROM
+on: 
+  push:
+    tags:
+      - 'v*' # יופעל כשתיצור תגית חדשה, למשל v1.0
+  workflow_dispatch: # מאפשר לך להפעיל ידנית
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # חשוב כדי לאפשר ל-Actions ליצור Release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi python3 libpng-dev wget git
+
+      - name: Setup agbcc
+        run: |
+          git clone https://github.com
+          cd agbcc
+          ./build.sh
+          ./install.sh ../
+          cd ..
+
+      - name: Get Base ROM
+        run: |
+          wget -O baserom.gba "https://archive.org"
+
+      - name: Build ROM
+        run: |
+          make clean
+          make -j$(nproc) COMPARE=0
+          # שינוי שם הקובץ לשם ברור ל-Release
+          mv *.gba PokemonHnS_Finished.gba || true
+          mv build/noking/*.gba PokemonHnS_Finished.gba || true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: success()
+        with:
+          files: PokemonHnS_Finished.gba
+          tag_name: v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
+          body: "הגרסה המוכנה של פוקימון הלב והנשמה. הורד את קובץ ה-GBA המצורף."
+          
