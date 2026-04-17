@@ -1,37 +1,42 @@
-name: Build ROM with Docker
+name: Build ROM Fix
 on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: devkitpro/devkitarm # משתמש בסביבה מוכנה מראש ל-GBA
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Install System Tools
         run: |
-          apt-get update
-          apt-get install -y build-essential python3 libpng-dev wget git
+          sudo apt-get update
+          sudo apt-get install -y build-essential binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi python3 libpng-dev wget
 
-      - name: Setup agbcc
+      - name: Setup agbcc (Direct Download)
         run: |
-          git clone https://github.com
-          cd agbcc
+          # במקום git clone, אנחנו מורידים את הקבצים ישירות כדי למנוע שגיאה 128
+          wget https://github.com
+          unzip master.zip
+          cd agbcc-master
           sh build.sh
           sh install.sh ../
           cd ..
 
-      - name: Get Base ROM
+      - name: Download Base ROM
         run: |
           wget -O baserom.gba "https://archive.org"
 
       - name: Build ROM
         run: |
+          make clean
           make -j$(nproc)
 
       - name: Upload Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: PokemonHnS-Final-ROM
-          path: "*.gba"
+          name: PokemonHnS-Final-GBA
+          path: |
+            *.gba
+            build/noking/*.gba
+            
