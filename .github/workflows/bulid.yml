@@ -1,41 +1,29 @@
-name: Build Full ROM (Safe Mode)
+name: Professional Build
 on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # שימוש בסביבה מוכנה מראש שחוסכת את כל ההתקנות שנכשלו
+    container: ghcr.io/pret/pokeemerald-builder:latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi python3 libpng-dev wget unzip
-
-      - name: Setup agbcc
-        run: |
-          wget https://github.com
-          unzip master.zip
-          cd agbcc-master
-          sh build.sh
-          sh install.sh ../
-          cd ..
-
-      - name: Get Base ROM
+      - name: Prepare Base ROM
         run: |
           wget -O baserom.gba "https://archive.org"
 
-      - name: Build ROM (Slow & Steady)
+      - name: Build ROM
         run: |
+          # בסביבה הזו הכל כבר מותקן, פשוט מריצים make
           make clean
-          # בנייה ללא -j כדי לא להעמיס על הזיכרון ולמנוע שגיאה 9
-          make
+          make -j2
 
-      - name: Upload
+      - name: Upload Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: PokemonHnS-Final-GBA
+          name: PokemonHnS-Final
           path: |
             *.gba
             build/noking/*.gba
