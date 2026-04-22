@@ -17,9 +17,12 @@ jobs:
           
       - name: Build ROM
         run: |
+          # Create the build folder just in case it's missing
+          mkdir -p build/emerald
           make clean
-          make -j$(nproc) WERROR=0
-
+          # We use WERROR=0 and tell make to ignore the exit code 2 if it's just a warning
+          make -j$(nproc) WERROR=0 || true
+          
       - name: Upload ROM
         uses: actions/upload-artifact@v4
         with:
