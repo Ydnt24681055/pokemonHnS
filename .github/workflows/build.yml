@@ -17,18 +17,18 @@ jobs:
 
       - name: Download baserom
         run: |
-          # This downloads a clean Emerald ROM and names it baserom.gba
-          curl -L https://github.com/pret/pokeemerald/raw/master/baserom.gba -o baserom.gba || echo "Download failed, trying secondary source..."
-          # If the first link fails, we'll try to find a mirror or just proceed
-          
+          # This pulls a clean base Emerald ROM so the compiler can link your changes
+          curl -L https://github.com/pret/pokeemerald/raw/master/baserom.gba -o baserom.gba
+
       - name: Build ROM
         run: |
           make clean
-          # Use IGNORE_CHECK=1 just in case the downloaded ROM has a different hash
+          # IGNORE_CHECK=1 lets it build even if the baserom isn't a perfect 100% match
           make -j$(nproc) WERROR=0 IGNORE_CHECK=1
           
       - name: Upload ROM
         uses: actions/upload-artifact@v4
         with:
           name: pokemonhns-rom
+          # This specifically looks for the main game file
           path: "*.gba"
