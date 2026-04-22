@@ -20,4 +20,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pokemonhns-rom
-          path: pokemonhns.gba
+          # This will search for any .gba file in the whole project
+          path: "**/*.gba"
