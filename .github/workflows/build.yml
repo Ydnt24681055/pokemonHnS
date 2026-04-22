@@ -17,12 +17,16 @@ jobs:
 
       - name: Build ROM
         run: |
-          mkdir -p build/emerald
           make clean
           make -j$(nproc) WERROR=0 || true
-
+          
       - name: Upload ROM
         uses: actions/upload-artifact@v4
         with:
           name: pokemonhns-rom
-          path: build/emerald/*.gba
+          # This looks for any GBA file that DOES NOT start with 'mb_' 
+          # (to skip those tiny multiboot files)
+          path: |
+            *.gba
+            build/*.gba
+            build/emerald/*.gba
